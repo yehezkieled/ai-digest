@@ -97,18 +97,27 @@ For [Update] items: find the existing row and update the "Last Meaningful Update
 
 ---
 
-### Step 6 — Commit and push
+### Step 6 — Present the digest (PRIMARY DELIVERY — always do this first)
 
-```bash
-git add digests/ coverage-log.md
-git commit -m "digest: YYYY-MM-DD (N new, M updates)"
-git push
-```
+Output the full digest content in this session so Hezki can read it directly in the Claude app.
+This is the primary delivery channel and must ALWAYS happen — do it BEFORE any git operations,
+so a git failure can never stop Hezki from receiving the digest.
 
 ---
 
-### Step 7 — Present
+### Step 7 — Archive to git (best-effort — must never block delivery)
 
-Output the full digest content in this session so Hezki can read it directly in the Claude app.
+Try to commit and push the digest + coverage log. If push fails (e.g. this cloud environment
+has read-only access to the repo), do NOT treat it as an error — the digest is already delivered
+above. Note the failure and finish cleanly.
 
-End with one line: `Committed to digests/YYYY-MM-DD.md — coverage log now at [N] entries.`
+```bash
+git add digests/ coverage-log.md
+git commit -m "digest: YYYY-MM-DD (N new, M updates)" || true
+git push || echo "archive push failed (no write access) — digest already delivered in session"
+```
+
+End with one line — either:
+`Archived to digests/YYYY-MM-DD.md — coverage log now at [N] entries.`
+or, if push failed:
+`Digest delivered in session; archive push failed — coverage log not persisted this run.`
