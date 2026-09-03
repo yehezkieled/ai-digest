@@ -1,35 +1,36 @@
 # ai-digest
 
-Personal AI research system. Two things in one repo:
+Daily AI research digest, delivered to Telegram.
 
-1. **Daily digest** — a Claude Code Routine (scheduled cloud agent) runs at ~7am AEST. Researches
-   the last 30 days across AI, tech, startups, and data science. Delivers only genuinely new or
-   meaningfully-updated items to the Claude mobile app. Never repeats.
+`run.sh` runs Claude Code headless with `digest-prompt.md`, then sends the plain-text
+result to the Lona Telegram bot. Each run covers the last 48 hours, so no dedup log is
+needed and digests never repeat.
 
-2. **`/kickoff` enrichment** — on-demand. Run `/kickoff "<rough idea>"` in any Claude Code session
-   to get a current-best-practices brief: relevant stack, Claude skills, recent dev strategies,
-   known pitfalls, minimal starting point.
+## Files
 
----
-
-## Repo structure
-
-| File/Folder | Purpose |
+| File | Purpose |
 |---|---|
-| `research-method.md` | Canonical research discipline — sources, signal criteria, output format. Edit this to tune what gets included. |
-| `coverage-log.md` | Dedup ledger. The routine reads this every run and skips anything already reported (unless meaningfully updated). |
-| `digests/` | One `YYYY-MM-DD.md` per routine run. Permanent searchable archive. |
-| `routine-prompt.md` | Exact prompt the daily Routine executes. Edit to change digest behavior. |
+| `run.sh` | Entry point. Runs `claude -p`, sends the output to Telegram, logs to `logs/`. Sends a `[FAILED]` alert instead if the run errors or returns nothing. |
+| `digest-prompt.md` | The prompt. Edit this to change topics, sources, window, or output style. |
+| `logs/` | One log per run (`YYYY-MM-DD_HHMM.log`). Git-ignored. |
 
-Claude config (outside this repo):
-- `~/.claude/agents/researcher.md` — subagent used by `/kickoff`
-- `~/.claude/commands/kickoff.md` — slash command definition
+## Setup
 
----
+`run.sh` reads two values from `~/.claude/channels/telegram-lona/.env`:
 
-## Tuning
+```
+TELEGRAM_BOT_TOKEN=...
+TELEGRAM_CHAT_ID=...
+```
 
-- Topic scope, sources, signal/noise filter → edit `research-method.md`
-- Digest format, dedup rules, step-by-step → edit `routine-prompt.md`
-- `/kickoff` brief format → edit `~/.claude/commands/kickoff.md`
-- Coverage log (manual corrections) → edit `coverage-log.md` directly
+Manual run:
+
+```bash
+bash run.sh
+```
+
+Daily at 07:00 local time via cron:
+
+```
+0 7 * * * /usr/bin/bash /home/hezki/projects/ai-digest/run.sh
+```
